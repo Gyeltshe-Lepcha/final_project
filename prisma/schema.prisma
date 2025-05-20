@@ -1,0 +1,70 @@
+generator client {
+  provider = "prisma-client-js"
+  // Removed output to use default path
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  name      String
+  contact   String
+  email     String   @unique
+  password  String
+  role      String   @default("user") // new field
+  createdAt DateTime @default(now())
+}
+model TeamMember {
+  id           Int      @id @default(autoincrement())
+  name         String
+  role         String
+  email        String   @unique
+  status       Status   @default(active)
+  profileImage String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+enum Status {
+  active
+  inactive
+  on_leave
+}
+model MenuItem {
+  id        Int         @id @default(autoincrement())
+  name      String
+  price     String
+  currency  String
+  category  String
+  image     String?
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+  reservations Reservation[] // Relation to Reservation
+}
+
+model Reservation {
+  id           Int      @id @default(autoincrement())
+  customerName String
+  contact      String
+  menuItemId   Int
+  menuItem     MenuItem @relation(fields: [menuItemId], references: [id])
+  quantity     Int
+  dateTime     DateTime
+  partySize    Int
+  notes        String?
+  status       String   @default("pending") // Options: pending, completed, cancelled
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Feedback {
+  id        Int      @id @default(autoincrement())
+  name      String
+  profession String
+  rating    Int
+  feedback  String
+  createdAt DateTime @default(now())
+}
