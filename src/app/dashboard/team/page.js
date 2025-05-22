@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import Image from "next/image";
 import {
   LayoutDashboard,
   Users,
@@ -427,13 +428,19 @@ export default function TeamPage() {
                     <div className="flex items-center gap-4">
                       <div className="w-20 h-20 rounded-full overflow-hidden bg-gray-100 dark:bg-gray-700 flex items-center justify-center">
                         {previewImage ? (
-                          <img
+                          <Image
                             src={previewImage}
                             alt="Profile preview"
+                            width={80}
+                            height={80}
                             className="w-full h-full object-cover"
                           />
                         ) : (
-                          <span className="text-gray-400 dark:text-gray-500">No image</span>
+                          <div className="w-20 h-20 bg-gray-200 dark:bg-gray-700 rounded-full flex items-center justify-center">
+                            <span className="text-3xl font-bold text-gray-500 dark:text-gray-400">
+                              {formData.name ? formData.name.charAt(0).toUpperCase() : "?"}
+                            </span>
+                          </div>
                         )}
                       </div>
                       <input
@@ -610,15 +617,19 @@ export default function TeamPage() {
                       <div className="flex items-center gap-4 flex-1">
                         <div className="w-12 h-12 rounded-full overflow-hidden bg-gray-100 dark:bg-gray-700 flex items-center justify-center">
                           {member.profileImage ? (
-                            <img
+                            <Image
                               src={member.profileImage}
-                              alt={`${member.name}'s profile`}
-                              className="w-full h-full object-cover"
+                              alt={member.name}
+                              width={48}
+                              height={48}
+                              className="w-12 h-12 rounded-full object-cover"
                             />
                           ) : (
-                            <span className="text-gray-400 dark:text-gray-500 text-xl">
-                              {member.name.charAt(0)}
-                            </span>
+                            <div className="w-12 h-12 bg-gray-200 dark:bg-gray-700 rounded-full flex items-center justify-center">
+                              <span className="text-xl font-bold text-gray-500 dark:text-gray-400">
+                                {member.name.charAt(0).toUpperCase()}
+                              </span>
+                            </div>
                           )}
                         </div>
                         <div className="flex-1">

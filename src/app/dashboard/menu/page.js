@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
+import Image from "next/image";
 import {
   LayoutDashboard,
   Users,
@@ -45,21 +46,35 @@ export default function MenuPage() {
     { symbol: "¥", name: "Japanese Yen" },
   ];
 
-  // New category options
-  const categoryOptions = [
+  // Memoized values
+  const categoryOptions = useMemo(() => [
     "Popular Breakfast",
     "Special Lunch",
     "Lovely Dinner",
     "Others",
-  ];
+  ], []);
 
-  // Fetch menu items from API
-  const fetchMenuItems = async () => {
+  // Memoized callbacks
+  const showNotification = useCallback((message, type) => {
+    setNotification({ message, type });
+    setTimeout(() => setNotification(null), 3000);
+  }, []);
+
+  const mapCategory = useCallback((category) => {
+    const oldToNew = {
+      "Starter": "Others",
+      "Main Course": "Others",
+      "Dessert": "Others",
+    };
+    return categoryOptions.includes(category) ? category : oldToNew[category] || "Others";
+  }, [categoryOptions]);
+
+  // Function to refresh menu items
+  const refreshMenuItems = useCallback(async () => {
     try {
       const response = await fetch('/api/menu');
       if (!response.ok) throw new Error('Failed to fetch menu items');
       const data = await response.json();
-      // Ensure backward compatibility: set default currency and map old categories
       const updatedData = data.map(item => ({
         ...item,
         currency: item.currency || "",
@@ -70,17 +85,15 @@ export default function MenuPage() {
       console.error('Error fetching menu items:', error);
       showNotification('Failed to fetch menu items', 'error');
     }
-  };
+  }, [mapCategory, showNotification]);
 
-  // Map old categories to new ones for backward compatibility
-  const mapCategory = (category) => {
-    const oldToNew = {
-      "Starter": "Others",
-      "Main Course": "Others",
-      "Dessert": "Others",
-    };
-    return categoryOptions.includes(category) ? category : oldToNew[category] || "Others";
-  };
+  // Effects
+  useEffect(() => {
+    // Initial fetch of menu items
+    refreshMenuItems().catch(error => {
+      console.error('Error in initial menu items fetch:', error);
+    });
+  }, [refreshMenuItems]);
 
   // Group and sort menu items by category
   const getGroupedMenuItems = () => {
@@ -93,11 +106,6 @@ export default function MenuPage() {
     return grouped;
   };
 
-  // Load menu items on component mount
-  useEffect(() => {
-    fetchMenuItems();
-  }, []);
-
   // Apply theme on mount and theme changes
   useEffect(() => {
     document.documentElement.classList.toggle("dark", theme === "dark");
@@ -105,11 +113,6 @@ export default function MenuPage() {
       localStorage.setItem("theme", theme);
     }
   }, [theme]);
-
-  const showNotification = (message, type) => {
-    setNotification({ message, type });
-    setTimeout(() => setNotification(null), 3000);
-  };
 
   const validateForm = () => {
     const errors = {};
@@ -185,7 +188,7 @@ if (!formData.currency?.trim()) {
       if (!response.ok) throw new Error(`Failed to ${isEdit ? 'update' : 'create'} menu item`);
 
       // Refresh the menu items after successful operation
-      await fetchMenuItems();
+      await refreshMenuItems();
 
       showNotification(
         `"${formData.name}" ${isEdit ? 'updated' : 'added'} successfully`,
@@ -219,7 +222,7 @@ if (!formData.currency?.trim()) {
         if (!response.ok) throw new Error('Failed to delete menu item');
 
         // Refresh the menu items after successful deletion
-        await fetchMenuItems();
+        await refreshMenuItems();
 
         showNotification(`"${item.name}" deleted from menu`, "success");
       } catch (error) {
@@ -393,18 +396,16 @@ if (!formData.currency?.trim()) {
                       >
                         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6">
                           <div className="flex items-center gap-4 flex-1">
-                            {item.image ? (
-                              <img
-                                src={item.image}
-                                alt={item.name}
-                                className="w-12 h-12 object-cover rounded-lg"
-                                onError={(e) => (e.target.src = "https://via.placeholder.com/48?text=Image+Not+Found")}
-                              />
-                            ) : (
-                              <div className="w-12 h-12 bg-gray-200 dark:bg-gray-700 rounded-lg flex items-center justify-center">
-                                <span className="text-gray-400 dark:text-gray-500 text-xs">No Image</span>
-                              </div>
-                            )}
+                            <Image
+                              src={item.image || "https://via.placeholder.com/80?text=Image+Not+Found"}
+                              alt={item.name}
+                              width={80}
+                              height={80}
+                              className="w-20 h-20 rounded-lg object-cover mr-4"
+                              onError={(e) => {
+                                e.target.src = "https://via.placeholder.com/80?text=Image+Not+Found";
+                              }}
+                            />
                             <div>
                               <h4 className="text-lg font-medium text-gray-800 dark:text-gray-100">
                                 {item.name}

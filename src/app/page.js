@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useState, useEffect, useRef } from "react";
+import Image from "next/image";
+import { useState, useEffect, useRef, useCallback } from "react";
 import "@fortawesome/fontawesome-free/css/all.min.css";
 import ReactPlayer from "react-player";
 import Head from "next/head";
@@ -283,7 +284,7 @@ export default function RestaurantWebsite() {
   };
 
   // Fetch menu items from API
-  const fetchMenuItems = async () => {
+  const fetchMenuItems = useCallback(async () => {
     try {
       const response = await fetch("/api/menu");
       if (!response.ok) throw new Error("Failed to fetch menu items");
@@ -315,7 +316,7 @@ export default function RestaurantWebsite() {
     } catch (error) {
       console.error("Error fetching menu items:", error);
     }
-  };
+  }, []);  // Empty dependency array since it doesn't depend on any props or state
 
   const mapCategory = (category) => {
     const categoryMap = {
@@ -335,7 +336,7 @@ export default function RestaurantWebsite() {
 
   useEffect(() => {
     fetchMenuItems();
-  }, []);
+  }, [fetchMenuItems]);
 
   // ======= Effects =======
   useEffect(() => {
@@ -377,7 +378,7 @@ export default function RestaurantWebsite() {
   const showPrivacyPolicy = () => {
     setModalTitle("Privacy Policy");
     setModalContent(
-      "At Lama Restaurant, we value your privacy. Your data is safe, and we don’t share it with anyone unless required by law."
+      "At Lama Restaurant, we value your privacy. Your data is safe, and we don't share it with anyone unless required by law."
     );
     setShowModal(true);
   };
@@ -385,7 +386,7 @@ export default function RestaurantWebsite() {
   const showTermsConditions = () => {
     setModalTitle("Terms & Conditions");
     setModalContent(
-      "By using Lama Restaurant’s services, you agree to follow our rules. Be kind, eat good food, and don’t misuse our platform."
+      "By using Lama Restaurant's services, you agree to follow our rules. Be kind, eat good food, and don't misuse our platform."
     );
     setShowModal(true);
   };
@@ -503,7 +504,15 @@ export default function RestaurantWebsite() {
               <a href="#book" className="inline-block bg-yellow-500 text-black font-bold px-6 py-3 rounded hover:bg-yellow-600 transition duration-300">Book a Table</a>
             </div>
             <div className="md:w-1/2 text-center">
-              <img id="sliderImage" src={images[currentImageIndex]} alt="Grilled Food" className="w-3/4 rounded-lg mx-auto transition-opacity duration-500"/>
+              {/* Slider Image */}
+              <Image 
+                id="sliderImage" 
+                src={images[currentImageIndex]} 
+                alt="Grilled Food" 
+                width={800}
+                height={600}
+                className="w-3/4 rounded-lg mx-auto transition-opacity duration-500"
+              />
             </div>
           </div>
         </div>
@@ -523,7 +532,9 @@ export default function RestaurantWebsite() {
                   <div className="bg-gray-600 rounded-lg p-5 text-center shadow-lg max-w-md mx-auto my-4">
                     <p><span className="text-3xl text-yellow-500">❝</span>{testimonial.quote}</p>
                     <div className="flex items-center justify-center mt-4">
-                      <img src={testimonial.img} alt={testimonial.name} className="w-12 h-12 rounded-full mr-3" />
+                      <div className="w-12 h-12 rounded-full bg-yellow-500 flex items-center justify-center text-black font-bold text-xl mr-3">
+                        {testimonial.name.charAt(0).toUpperCase()}
+                      </div>
                       <div>
                         <strong className="text-white">{testimonial.name}</strong>
                         <p className="text-gray-300">{testimonial.role}</p>
@@ -568,25 +579,33 @@ export default function RestaurantWebsite() {
           <div className="w-full md:w-1/2 mb-8 md:mb-0">
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-4">
-                <img 
+                <Image 
                   src="https://www.travellersquest.com/blog/wp-content/uploads/2022/09/Bhutan-Restaurants-min.jpg" 
+                  width={400}
+                  height={300}
                   className="w-full h-auto rounded-lg shadow-lg" 
                   alt="Restaurant"
                 />
-                <img 
+                <Image 
                   src="https://th.bing.com/th/id/OIP.qPhdTUygag9J5qLPpEMxQQHaE7?rs=1&pid=ImgDetMain" 
+                  width={400}
+                  height={300}
                   className="w-full h-auto rounded-lg shadow-lg" 
                   alt="Food"
                 />
               </div>
               <div className="space-y-4">
-                <img 
+                <Image 
                   src="https://www.heavenlybhutan.com/wp-content/uploads/bfi_thumb/d-p493hmq4gtlzs031rgf8th0ud2ixtigfac7omk4h3c.jpg" 
+                  width={400}
+                  height={300}
                   className="w-full h-auto rounded-lg shadow-lg" 
                   alt="Restaurant"
                 />
-                <img 
+                <Image 
                   src="https://th.bing.com/th/id/OIP.X4O7zRxcP44EejExTdSdbAHaE8?rs=1&pid=ImgDetMain" 
+                  width={400}
+                  height={300}
                   className="w-full h-auto rounded-lg shadow-lg" 
                   alt="Food"
                 />
@@ -710,11 +729,15 @@ export default function RestaurantWebsite() {
                 key={index}
                 className="flex items-center justify-between bg-white p-4 rounded-lg shadow-md hover:transform hover:-translate-y-1 transition duration-300"
               >
-                <img
+                <Image
                   src={item.image || "https://via.placeholder.com/80?text=Image+Not+Found"}
                   alt={item.name}
+                  width={80}
+                  height={80}
                   className="w-20 h-20 rounded-lg object-cover mr-4"
-                  onError={(e) => (e.target.src = "https://via.placeholder.com/80?text=Image+Not+Found")}
+                  onError={(e) => {
+                    e.target.src = "https://via.placeholder.com/80?text=Image+Not+Found";
+                  }}
                 />
                 <div className="flex-grow text-left">
                   <h4 className="text-lg font-bold text-gray-800">
@@ -1262,9 +1285,11 @@ export default function RestaurantWebsite() {
                 <div className="p-6">
                   <div className="flex justify-center">
                     {member.profileImage ? (
-                      <img
+                      <Image
                         src={member.profileImage}
                         alt={member.name}
+                        width={128}
+                        height={128}
                         className="w-32 h-32 rounded-full object-cover border-4 border-yellow-500"
                       />
                     ) : (
