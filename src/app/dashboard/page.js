@@ -130,8 +130,8 @@ export default function DashboardPage() {
     setOrderSummary((prev) => ({
       ...prev,
       pending: prev.pending - 1,
-      [action === "accept" ? "completed" : "cancelled"]:
-        prev[action === "accept" ? "completed" : "cancelled"] + 1,
+      [action === "complete" ? "completed" : "cancelled"]:
+        prev[action === "complete" ? "completed" : "cancelled"] + 1,
     }));
   };
 
@@ -155,7 +155,7 @@ export default function DashboardPage() {
   const handleLogout = () => {
     const confirmLogout = window.confirm("Are you sure you want to log out?");
     if (confirmLogout) {
-      router.push("/login");
+      router.push("/");
     }
   };
 

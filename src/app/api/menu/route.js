@@ -95,34 +95,78 @@ export async function PUT(request) {
 // DELETE a menu item
 export async function DELETE(request) {
   try {
-    const { id } = await request.json()
-
+    // Parse the request body
+    const requestBody = await request.json();
+    console.log('Delete request body:', requestBody);
+    
+    const { id } = requestBody;
+    
     if (!id) {
       return NextResponse.json(
-        { error: 'ID is required' },
+        { 
+          success: false,
+          error: 'ID_REQUIRED',
+          message: 'ID is required for deletion'
+        },
         { status: 400 }
-      )
+      );
     }
 
-    await prisma.menuItem.delete({
-      where: { id: parseInt(id) },
-    })
+    // Convert ID to number
+    const numericId = Number(id);
+    if (isNaN(numericId)) {
+      return NextResponse.json(
+        { 
+          success: false,
+          error: 'INVALID_ID_FORMAT',
+          message: 'ID must be a number'
+        },
+        { status: 400 }
+      );
+    }
+
+    // Attempt deletion
+    const deletedItem = await prisma.menuItem.delete({
+      where: { id: numericId },
+    });
 
     return NextResponse.json(
-      { message: 'Menu item deleted successfully' },
+      { 
+        success: true,
+        data: deletedItem
+      },
       { status: 200 }
-    )
+    );
+
   } catch (error) {
-    console.error('Error deleting menu item:', error)
+    // Enhanced error logging
+    console.error('DELETE Error Details:', {
+      message: error.message,
+      code: error.code,
+      stack: error.stack,
+      meta: error.meta
+    });
+
+    // Specific handling for Prisma errors
     if (error.code === 'P2025') {
       return NextResponse.json(
-        { error: 'Menu item not found' },
+        { 
+          success: false,
+          error: 'ITEM_NOT_FOUND',
+          message: 'Menu item not found'
+        },
         { status: 404 }
-      )
+      );
     }
+
+    // Generic error response
     return NextResponse.json(
-      { error: 'Failed to delete menu item' },
+      { 
+        success: false,
+        error: 'DELETE_FAILED',
+        message: error.message || 'Failed to delete menu item'
+      },
       { status: 500 }
-    )
+    );
   }
 }

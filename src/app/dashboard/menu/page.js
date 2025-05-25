@@ -1,7 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useMemo } from "react";
-import Image from "next/image";
+import { useState, useEffect } from "react";
 import {
   LayoutDashboard,
   Users,
@@ -46,35 +45,21 @@ export default function MenuPage() {
     { symbol: "¥", name: "Japanese Yen" },
   ];
 
-  // Memoized values
-  const categoryOptions = useMemo(() => [
+  // New category options
+  const categoryOptions = [
     "Popular Breakfast",
     "Special Lunch",
     "Lovely Dinner",
     "Others",
-  ], []);
+  ];
 
-  // Memoized callbacks
-  const showNotification = useCallback((message, type) => {
-    setNotification({ message, type });
-    setTimeout(() => setNotification(null), 3000);
-  }, []);
-
-  const mapCategory = useCallback((category) => {
-    const oldToNew = {
-      "Starter": "Others",
-      "Main Course": "Others",
-      "Dessert": "Others",
-    };
-    return categoryOptions.includes(category) ? category : oldToNew[category] || "Others";
-  }, [categoryOptions]);
-
-  // Function to refresh menu items
-  const refreshMenuItems = useCallback(async () => {
+  // Fetch menu items from API
+  const fetchMenuItems = async () => {
     try {
       const response = await fetch('/api/menu');
       if (!response.ok) throw new Error('Failed to fetch menu items');
       const data = await response.json();
+      // Ensure backward compatibility: set default currency and map old categories
       const updatedData = data.map(item => ({
         ...item,
         currency: item.currency || "",
@@ -85,15 +70,17 @@ export default function MenuPage() {
       console.error('Error fetching menu items:', error);
       showNotification('Failed to fetch menu items', 'error');
     }
-  }, [mapCategory, showNotification]);
+  };
 
-  // Effects
-  useEffect(() => {
-    // Initial fetch of menu items
-    refreshMenuItems().catch(error => {
-      console.error('Error in initial menu items fetch:', error);
-    });
-  }, [refreshMenuItems]);
+  // Map old categories to new ones for backward compatibility
+  const mapCategory = (category) => {
+    const oldToNew = {
+      "Starter": "Others",
+      "Main Course": "Others",
+      "Dessert": "Others",
+    };
+    return categoryOptions.includes(category) ? category : oldToNew[category] || "Others";
+  };
 
   // Group and sort menu items by category
   const getGroupedMenuItems = () => {
@@ -105,6 +92,11 @@ export default function MenuPage() {
     }, {});
     return grouped;
   };
+
+  // Load menu items on component mount
+  useEffect(() => {
+    fetchMenuItems();
+  }, []);
 
   // Apply theme on mount and theme changes
   useEffect(() => {
@@ -207,7 +199,8 @@ if (!formData.currency?.trim()) {
     }
   };
 
-  const handleDeleteItem = async (id) => {
+ const handleDeleteItem = async (id) => {
+  try {
     const item = menuItems.find((item) => item.id === id);
     if (window.confirm(`Are you sure you want to delete "${item.name}" from the menu?`)) {
       try {
@@ -222,7 +215,7 @@ if (!formData.currency?.trim()) {
         if (!response.ok) throw new Error('Failed to delete menu item');
 
         // Refresh the menu items after successful deletion
-        await refreshMenuItems();
+        await fetchMenuItems();
 
         showNotification(`"${item.name}" deleted from menu`, "success");
       } catch (error) {
@@ -394,7 +387,8 @@ if (!formData.currency?.trim()) {
                         key={item.id}
                         className="px-6 py-4 transition-all duration-200 ease-in-out hover:scale-[1.01] hover:shadow-lg dark:hover:shadow-purple-500/30"
                       >
-                        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6">
+                        <div className="flex f
+                              lex-col sm:flex-row justify-between items-start sm:items-center gap-6">
                           <div className="flex items-center gap-4 flex-1">
                             <Image
                               src={item.image || "https://via.placeholder.com/80?text=Image+Not+Found"}
